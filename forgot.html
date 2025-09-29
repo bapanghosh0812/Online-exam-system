@@ -167,16 +167,20 @@ function resetPassword(){
 }
 document.getElementById("resetBtn").addEventListener("click",resetPassword);
 
-   (function () {
-    // Force clear forward stack on load
-    if (window.history.forward(1)) {
-        window.history.go(-1);
-    }
+  (function () {
+    // Page load hote hi ek state push karo
+    history.pushState(null, null, location.href);
 
-    // Allow back but kill forward
+    // Jab user back kare to allow karo (kyunki hum chahte hain back kaam kare)
+    window.addEventListener("popstate", function (event) {
+        // Fir se ek state daal do taaki forward stack khatam ho jaye
+        history.pushState(null, null, location.href);
+    });
+
+    // Extra: Agar koi forward dabaye to turant disable ho
     window.addEventListener("pageshow", function (event) {
         if (event.persisted) {
-            window.location.reload(); // cache se aane par bhi forward clear ho
+            history.pushState(null, null, location.href);
         }
     });
 })();
