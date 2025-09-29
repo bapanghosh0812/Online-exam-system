@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Dashboard</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    animation: gradientBG 10s ease infinite;
+    background: linear-gradient(270deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+    background-size: 800% 800%;
+    user-select: none;
+  }
+
+  @keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 15px 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 22px;
+    color: #333;
+  }
+  .logout-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #ff4b5c;
+    color: white;
+    font-weight: bold;
+  }
+  .dashboard {
+    display: flex;
+    gap: 20px;
+    margin: 20px;
+  }
+  .left, .right {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    padding: 20px;
+  }
+  .left { width: 30%; }
+  .right { width: 70%; }
+  .student-detail { margin: 10px 0; font-size: 16px; }
+  .digital-clock { font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #333; }
+  .exam-section { margin-bottom: 20px; }
+  .exam-section h2 {
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+  }
+  .exam-item { border-bottom: 1px solid #ddd; padding: 10px 0; }
+  .exam-item:last-child { border-bottom: none; }
+  .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
+  .btn.active { background: #4CAF50; color: white; }
+  .btn.submitted { background: gray; color: white; }
+  .btn.disabled { background: #ccc; color: black; cursor: not-allowed; }
+</style>
+</head>
+<body oncontextmenu="return false;">
+  <header>
+    <h1>🏛️ ABC Institute of Technology - Student Dashboard</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <div class="dashboard">
+    <div class="left">
+      <div class="digital-clock" id="digitalClock"></div>
+      <h2>👤 Student Details</h2>
+      <div id="studentInfo"></div>
+    </div>
+    <div class="right">
+      <div class="exam-section">
+        <h2>📅 Upcoming Exams</h2>
+        <div id="upcomingExams"></div>
+      </div>
+      <div class="exam-section">
+        <h2>🟢 Active Exams</h2>
+        <div id="activeExams"></div>
+      </div>
+      <div class="exam-section">
+        <h2>✅ Submitted Exams</h2>
+        <div id="submittedExams"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+function logout(){
+  localStorage.removeItem("currentUser");
+  setTimeout(() => { window.location.replace("login.html"); }, 100); // ✅ changed
+}
+
+function updateClock(){
+  setInterval(()=>{
+    let now = new Date();
+    document.getElementById("digitalClock").textContent = `🕒 ${now.toLocaleTimeString()}`;
+  },1000);
+}
+
+function renderStudentInfo(){
+  let currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+  if(currentUser.roll && (!currentUser.gender || currentUser.gender === "NA")){
+    currentUser.gender = "Male";
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    let users = JSON.parse(localStorage.getItem("current users")) || [];
+    users = users.map(u => { if(u.roll === currentUser.roll){ u.gender = "Male";} return u; });
+    localStorage.setItem("current users", JSON.stringify(users));
+  }
+  let infoBox = document.getElementById("studentInfo");
+  if(currentUser.roll){
+    infoBox.innerHTML = `
+      <div class="student-detail"><b>Name:</b> ${currentUser.name || "N/A"}</div>
+      <div class="student-detail"><b>Roll No:</b> ${currentUser.roll}</div>
+      <div class="student-detail"><b>DOB:</b> ${currentUser.dob || "N/A"}</div>
+      <div class="student-detail"><b>Gender:</b> ${currentUser.gender || "N/A"}</div>
+      <div class="student-detail"><b>Phone:</b> ${currentUser.phone || "N/A"}</div>
+      <div class="student-detail"><b>Registration No:</b> ${currentUser.registration || "N/A"}</div>
+    `;
+  } else {
+    infoBox.innerHTML = "<p>No student info found. Please login again.</p>";
+  }
+}
+
+function renderExams(){
+  let exams = JSON.parse(localStorage.getItem("exams")) || [];
+  let submittedExams = JSON.parse(localStorage.getItem("submittedExams")) || {};
+  let now = new Date();
+  document.getElementById("upcomingExams").innerHTML = "";
+  document.getElementById("activeExams").innerHTML = "";
+  document.getElementById("submittedExams").innerHTML = "";
+
+  exams.forEach(ex => {
+    let examStart = new Date(`${ex.date}T${ex.time}`);
+    let examEnd = new Date(examStart.getTime() + ex.duration*60000);
+    let item = document.createElement("div");
+    item.className = "exam-item";
+
+    if(submittedExams[ex.id]){
+      item.innerHTML = `<h3>${ex.subject}</h3><p><b>Date:</b> ${ex.date} | <b>Time:</b> ${ex.time}</p><button class='btn submitted' disabled>Submitted</button>`;
+      document.getElementById("submittedExams").appendChild(item);
+    } else if(now < examStart){
+      item.innerHTML = `<h3>${ex.subject}</h3><p><b>Date:</b> ${ex.date} | <b>Time:</b> ${ex.time}</p><button class='btn disabled' disabled>Not Started</button>`;
+      document.getElementById("upcomingExams").appendChild(item);
+    } else if(now >= examStart && now <= examEnd){
+      item.innerHTML = `<h3>${ex.subject}</h3><p><b>Date:</b> ${ex.date} | <b>Time:</b> ${ex.time}</p><button class='btn active' onclick='startExam(${ex.id}, "${ex.subject}", ${examEnd.getTime()})'>Start Exam</button>`;
+      document.getElementById("activeExams").appendChild(item);
+    } else {
+      submittedExams[ex.id] = true;
+      localStorage.setItem("submittedExams", JSON.stringify(submittedExams));
+      renderExams();
+    }
+  });
+}
+
+function startExam(id, subject, endTime){
+  // 🚀 exam questions page pe leke jaayega
+  localStorage.setItem("currentExam", JSON.stringify({id, subject, endTime}));
+  window.location.replace("exam.html"); // ✅ changed
+}
+
+ window.onload = function () {
+    if (window.history && window.history.pushState) {
+      // Push a state to clear forward history
+      history.pushState(null, null, location.href);
+
+      // Handle back button
+      window.onpopstate = function () {
+        // Allow back button normally
+        if (window.history.state === null) {
+          return;
+        }
+        // Block forward navigation
+        history.pushState(null, null, location.href);
+      };
+    }
+  };
+
+</script>
+</body>
+</html>

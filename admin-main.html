@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;  /* text select off */
+    -webkit-user-drag: none;
+    background: linear-gradient(270deg, #ff6b6b, #f7b733, #45cafc, #6a82fb);
+    background-size: 800% 800%;
+    animation: gradientBG 15s ease infinite;
+  }
+
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    font-weight: bold;
+    box-sizing: border-box;
+  }
+  .topbar .title {
+    font-size: 18px;
+    color: #fff;
+  }
+  .logout-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #ef4444;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+  .logout-btn:hover {
+    background: #dc2626;
+  }
+
+  .card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    text-align: center;
+    width: 350px;
+    margin-top: 100px; /* Topbar ke neeche jagah banane ke liye */
+    z-index: 1;
+  }
+  h2 {
+    margin-bottom: 25px;
+    color: #333;
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 15px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn-blue {
+    background: #2563eb;
+    color: white;
+  }
+  .btn-blue:hover {
+    background: #1e4ed8;
+  }
+  .btn-green {
+    background: #10b981;
+    color: white;
+  }
+  .btn-green:hover {
+    background: #059669;
+  }
+</style>
+</head>
+<body oncontextmenu="return false">
+  <div class="topbar">
+    <div class="title">🏛️ ABS Institute of Technology</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="card">
+    <h2>Admin Dashboard</h2>
+    <button class="btn btn-blue" onclick="window.location.href='admin-results.html'">View Student Marks</button>
+    <button class="btn btn-green" onclick="window.location.href='exam-dashboard.html'">Set Question Paper</button>
+  </div>
+
+<script>
+  function logout(){
+    setTimeout(() => {
+      window.location.href = "admin.html"; 
+    }, 100); // 100ms delay
+  }
+</script>
+</body>
+</html>

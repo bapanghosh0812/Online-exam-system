@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Examination System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      height: 100vh;
+
+      /* 🔵 Animated gradient background */
+      background: linear-gradient(-45deg, #1e3c72, #2a5298, #56ccf2, #2f80ed);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+
+      /* ❌ Disable selection & mouse events by default */
+      user-select: none;
+      pointer-events: none;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: auto; /* ✅ Header visible */
+    }
+
+    header h1 {
+      font-size: 22px;
+      margin: 0;
+      color: #1e3c72;
+    }
+
+    .main-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 40px;
+      max-width: 1100px;
+      margin: auto;
+      pointer-events: auto; /* ✅ Allow clicks inside main container */
+    }
+
+    .card {
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      transition: all 0.4s ease-in-out;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      pointer-events: auto; /* ✅ Buttons clickable */
+    }
+
+    /* Hover glow animation */
+    .card:hover {
+      transform: translateY(-8px) scale(1.05);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Card gradient colors */
+    .student { background: linear-gradient(to right, #43cea2, #185a9d); }
+    .admin { background: linear-gradient(to right, #ff512f, #dd2476); }
+    .teacher { background: linear-gradient(to right, #f7971e, #ffd200); color:#333; }
+    .college { background: linear-gradient(to right, #283c86, #45a247); }
+    .result { background: linear-gradient(to right, #56ccf2, #2f80ed); }
+    .help { background: linear-gradient(to right, #373b44, #4286f4); }
+
+    .card:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>🏛️ ABC Institute of Technology</h1>
+    </div>
+    <h1>EXAMINATION SYSTEM</h1>
+  </header>
+
+ <div class="main-container">
+  <button class="card student" onclick="location.href='student.html'">STUDENT</button>
+  <button class="card admin" onclick="location.href='admin.html'">ADMIN</button>
+  <button class="card teacher" onclick="location.replace('admin-signup.html')">TEACHER</button>
+  <button class="card college">COLLEGE</button>
+  <button class="card result" onclick="location.replace('results.html')">RESULT</button>
+  <button class="card help" onclick="location.replace('helpdesk.html')">HELPDESK</button>
+</div>
+
+
+</body>
+</html>

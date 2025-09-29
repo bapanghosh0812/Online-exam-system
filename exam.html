@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ABS Online Exam</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif;user-select:none}
+  body{
+    color:#fff;
+    height:100vh;
+    background: linear-gradient(270deg,#ff6ec4,#7873f5,#4ade80);
+    background-size:600% 600%;
+    animation: gradientBG 15s ease infinite;
+    -webkit-font-smoothing:antialiased;
+  }
+  @keyframes gradientBG {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(0,0,0,0.55);
+    padding:10px 16px;
+    box-sizing:border-box;
+  }
+  header .title{font-weight:700;font-size:18px}
+  header .right{display:flex;align-items:center;gap:12px}
+  #timeLeft{font-weight:600}
+  button.action{
+    background:#e11d48;border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;
+  }
+  .wrap{display:flex;height:calc(100vh - 52px);overflow:hidden}
+  .sidebar{width:240px;background:rgba(0,0,0,0.6);padding:10px;box-sizing:border-box;overflow:auto}
+  .sidebar table{width:100%;border-collapse:collapse}
+  .sidebar td{padding:1px}
+  .sidebar button.qbtn{
+    width:44px;height:44px;border-radius:6px;border:none;cursor:pointer;
+    background:#333;color:#fff;font-weight:600;
+  }
+  .sidebar button.qbtn.active{background:#2563eb}
+  .sidebar button.qbtn.visited{background:#16a34a}
+  .sidebar button.qbtn.marked{background:#dc2626}
+
+  .content{flex:1;padding:18px;box-sizing:border-box;overflow:auto}
+  .question-card{background:rgba(0,0,0,0.45);padding:18px;border-radius:10px;margin-bottom:12px}
+  .options label{display:block;margin:8px 0;color:#fff;user-select:auto}
+  .controls{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+  .controls .left,.controls .center,.controls .right{display:flex;gap:10px;align-items:center}
+  .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+  .btn.primary{background:#2563eb;color:#fff}
+  .btn.ghost{background:rgba(255,255,255,0.9);color:#111}
+  .btn.submit{background:#16a34a;color:#fff}
+  #warningBar{
+    display:none;background:#fff3bf;color:#92400e;padding:10px;text-align:center;
+    font-weight:700;border-radius:6px;margin-top:12px
+  }
+  @media (max-width:800px){.sidebar{display:none}}
+</style>
+</head>
+<body>
+  <header>
+    <div class="title">🏛️ ABS Institute of Technology Online Exam</div>
+    <div class="right">
+      <div id="timeLeft">Time Left: --:--</div>
+      <button id="logoutBtn" class="action">Logout</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <aside class="sidebar">
+      <div id="markedCount" style="margin-bottom:8px;font-weight:600;text-align:center"></div>
+      <table id="questionTable"></table>
+    </aside>
+    <main class="content">
+      <div id="questionCard" class="question-card">Loading...</div>
+      <div class="controls">
+        <div class="left"><button id="prevBtn" class="btn ghost">Previous</button></div>
+        <div class="center"><button id="markBtn" class="btn ghost">Mark as Read</button></div>
+        <div class="right"><button id="nextBtn" class="btn ghost">Next</button></div>
+      </div>
+      <div style="margin-top:14px"><button id="submitBtn" class="btn submit" style="display:none">Submit Exam</button></div>
+      <div id="warningBar"></div>
+    </main>
+  </div>
+
+<script>
+// ================= INIT =================
+let currentExamId = sessionStorage.getItem("currentExamId");
+if (!currentExamId) {
+  currentExamId = localStorage.getItem("currentExamId"); 
+  sessionStorage.setItem("currentExamId", currentExamId);
+}
+
+const exams = JSON.parse(localStorage.getItem('exams')||'null');
+const questionsStore = JSON.parse(localStorage.getItem('questions')||'{}');
+if(!currentExamId||!exams){window.location.replace('student-dashboard.html');throw new Error('No exam info');}
+const currentExam = (Array.isArray(exams)?exams.find(e=>String(e.id)===String(currentExamId)):exams[currentExamId])||null;
+if(!currentExam){window.location.replace('student-dashboard.html');throw new Error('Exam not found');}
+const questions=questionsStore[currentExamId]||[];
+const examStartMs=new Date(`${currentExam.date}T${currentExam.time}`).getTime();
+const examEndMs=examStartMs+Number(currentExam.duration||1)*60000;
+
+const answersKey=`answers_${currentExamId}`;
+let answers=JSON.parse(localStorage.getItem(answersKey)||'{}');
+const marksKey=`marks_${currentExamId}`;
+let marks=JSON.parse(localStorage.getItem(marksKey)||'[]');
+const visitedKey=`visited_${currentExamId}`;
+let visited=JSON.parse(localStorage.getItem(visitedKey)||'[]');
+let currentIndex=0,warningCount=0;const WARNING_LIMIT=3;
+
+// DOM refs
+const questionTable=document.getElementById('questionTable');
+const questionCardEl=document.getElementById('questionCard');
+const prevBtn=document.getElementById('prevBtn');
+const nextBtn=document.getElementById('nextBtn');
+const markBtn=document.getElementById('markBtn');
+const submitBtn=document.getElementById('submitBtn');
+const timeLeftEl=document.getElementById('timeLeft');
+const logoutBtn=document.getElementById('logoutBtn');
+const warningBar=document.getElementById('warningBar');
+const markedCountEl=document.getElementById('markedCount');
+
+// persist
+function persistAnswers(){localStorage.setItem(answersKey,JSON.stringify(answers));}
+function persistMarks(){localStorage.setItem(marksKey,JSON.stringify(marks));}
+function persistVisited(){localStorage.setItem(visitedKey,JSON.stringify(visited));}
+function markVisited(id){ if(!visited.includes(id)){ visited.push(id); persistVisited(); } }
+
+// 🔵 New: formatting function (with line breaks)
+function formatText(txt){
+  return String(txt||'')
+    .replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]))
+    .replace(/\n/g,"<br>");
+}
+
+// render
+function renderSidebar(){
+  questionTable.innerHTML='';
+  let cols=5;
+  for(let row=0;row<Math.ceil(questions.length/cols);row++){
+    let tr=document.createElement('tr');
+    for(let col=0;col<cols;col++){
+      let idx=row*cols+col,td=document.createElement('td');
+      if(idx<questions.length){
+        let b=document.createElement('button');
+        const qid = questions[idx].id;
+        let classes=['qbtn'];
+        if(marks.includes(qid)) classes.push('marked');
+        else if(idx===currentIndex) classes.push('active');
+        else if(visited.includes(qid)) classes.push('visited');
+        b.className=classes.join(' ');
+        b.textContent=idx+1;
+        b.onclick=()=>{saveCurrentAnswer();currentIndex=idx;renderQuestion();renderSidebar();};
+        td.appendChild(b);
+      }
+      tr.appendChild(td);
+    }
+    questionTable.appendChild(tr);
+  }
+  markedCountEl.textContent=`Marked: ${marks.length}/${questions.length}`;
+  const q=questions[currentIndex];
+  if(q){
+    if(marks.includes(q.id)) markBtn.textContent="Mark as Unread";
+    else markBtn.textContent="Mark as Read";
+  }
+}
+function renderQuestion(){
+  if(questions.length===0){questionCardEl.innerHTML='<p>No questions available.</p>';return;}
+  const q=questions[currentIndex];
+  markVisited(q.id);
+  let html=`<h3 style="margin-top:0;color:#fff">Q${currentIndex+1}. ${formatText(q.question)}</h3><div class="options">`;
+  ['optA','optB','optC','optD'].forEach((opt,i)=>{
+    const key=String.fromCharCode(65+i); // A,B,C,D
+    const val=q[opt]||'';
+    const checked=(answers[q.id]===key)?'checked':'';
+    html+=`<label><input type="radio" name="q_${q.id}" value="${escapeAttr(val)}" ${checked}> ${formatText(val)}</label>`;
+  });
+  html+='</div>';questionCardEl.innerHTML=html;
+  submitBtn.style.display=(currentIndex===questions.length-1)?'inline-block':'none';
+  renderSidebar();
+}
+function escapeAttr(s){return String(s||'').replace(/"/g,'&quot;');}
+function saveCurrentAnswer(){
+  const q=questions[currentIndex];if(!q)return;
+  const sel=document.querySelector(`input[name="q_${q.id}"]:checked`);
+  if(sel){
+    let selectedKey=null;
+    ['optA','optB','optC','optD'].forEach((opt,i)=>{
+      if(q[opt]===sel.value){
+        selectedKey=String.fromCharCode(65+i);
+      }
+    });
+    answers[q.id]=selectedKey;
+    persistAnswers();
+  }
+}
+
+// nav
+prevBtn.onclick=()=>{saveCurrentAnswer();if(currentIndex>0){currentIndex--;renderQuestion();}};
+nextBtn.onclick=()=>{saveCurrentAnswer();if(currentIndex<questions.length-1){currentIndex++;renderQuestion();}};
+markBtn.onclick=()=>{const q=questions[currentIndex];if(!q)return;if(marks.includes(q.id)){marks=marks.filter(id=>id!==q.id);persistMarks();} else {marks.push(q.id);persistMarks();}renderSidebar();};
+submitBtn.onclick=()=>manualSubmit();
+logoutBtn.onclick=()=>manualSubmit();
+
+// timer
+let timerInterval;
+function startTimer(){const now=Date.now();if(now<examStartMs){window.location.replace('student-dashboard.html');return;}calcTick();timerInterval=setInterval(calcTick,1000);} 
+function calcTick(){const now=Date.now();let diffSec=Math.ceil((examEndMs-now)/1000);if(diffSec<=0){timeLeftEl.textContent="Time Left: 00:00";autoSubmit();return;}const m=Math.floor(diffSec/60),s=diffSec%60;timeLeftEl.textContent=`Time Left: ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
+
+// submit
+function collectScoreAndSave(){
+  saveCurrentAnswer();
+  let score=0;
+  for(const q of questions){if(answers[q.id]&&String(answers[q.id])===String(q.answer))score++;}
+  const submittedExams=JSON.parse(localStorage.getItem('submittedExams')||'{}');
+  submittedExams[currentExamId]=true;
+  localStorage.setItem('submittedExams',JSON.stringify(submittedExams));
+  const currentUser=JSON.parse(localStorage.getItem('currentUser')||'{}');
+  const allResults=JSON.parse(localStorage.getItem('allResults')||'[]');
+  allResults.push({roll:currentUser.roll||'Unknown',name:currentUser.name||'Unknown',exam:currentExam.subject||('Exam '+currentExamId),score,total:questions.length,timestamp:Date.now()});
+  localStorage.setItem('allResults',JSON.stringify(allResults));
+}
+function manualSubmit(){collectScoreAndSave();cleanupAndRedirect();}
+function autoSubmit(){collectScoreAndSave();cleanupAndRedirect();}
+function cleanupAndRedirect(){
+  localStorage.removeItem(answersKey);
+  localStorage.removeItem(visitedKey);
+  if(timerInterval)clearInterval(timerInterval);
+  window.location.replace('student-dashboard.html'); // ✅ changed
+}
+
+// warnings
+function showWarningMessage(text){warningBar.style.display='block';warningBar.textContent=text;setTimeout(()=>{warningBar.style.display='none';},5000);} 
+function registerWarning(reason){warningCount++;showWarningMessage(`⚠ Warning ${warningCount}: ${reason}`);if(warningCount>=WARNING_LIMIT){setTimeout(()=>{autoSubmit();},800);}}
+
+// leave/return
+let wasHidden=false;document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){wasHidden=true;} else if(document.visibilityState==='visible' && wasHidden){registerWarning('You left and returned to exam page');wasHidden=false;}});
+
+// INIT
+renderSidebar();renderQuestion();startTimer();
+
+// block right-click & shortcuts
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('keydown',e=>{if(e.key==='F12'||(e.ctrlKey&&['u','U','i','I','c','C'].includes(e.key))){registerWarning('Restricted shortcut');e.preventDefault();return false;}});
+
+// ========== EXTRA PROTECTION ==========
+let minWidth = window.screen.width * 0.7;  
+let minHeight = window.screen.height * 0.7;  
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth < minWidth || window.innerHeight < minHeight) {
+    registerWarning('Split screen or window resize detected');
+  }
+});
+
+setInterval(() => {
+  if (window.chrome && chrome.runtime && chrome.runtime.id) {
+    registerWarning('Extension activity detected');
+  }
+  if (document.querySelectorAll('iframe').length > 0) {
+    registerWarning('Suspicious extension iframe detected');
+  }
+}, 4000);
+
+  window.onload = function () {
+    if (window.history && window.history.pushState) {
+      // Push a state to clear forward history
+      history.pushState(null, null, location.href);
+
+      // Handle back button
+      window.onpopstate = function () {
+        // Allow back button normally
+        if (window.history.state === null) {
+          return;
+        }
+        // Block forward navigation
+        history.pushState(null, null, location.href);
+      };
+    }
+  };
+
+</script>
+</body>
+</html>

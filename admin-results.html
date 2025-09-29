@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Admin Result Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  *{box-sizing:border-box;user-select:none}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#111;
+    background:linear-gradient(270deg,#ff6ec4,#7873f5,#4ade80);
+    background-size:600% 600%;animation:bg 15s ease infinite;}
+  @keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  header{display:flex;justify-content:space-between;align-items:center;
+    background:rgba(0,0,0,0.55);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:10;}
+  header .title{font-weight:700;font-size:18px}
+  .btn{border:none;border-radius:6px;padding:8px 12px;cursor:pointer}
+  .btn.red{background:#dc2626;color:#fff}
+  .btn.blue{background:#2563eb;color:#fff}
+  .btn.green{background:#16a34a;color:#fff}
+  .btn.gray{background:#6b7280;color:#fff}
+  .btn[disabled]{opacity:.6;cursor:not-allowed}
+  main{padding:18px}
+  .panel{background:#fff;border-radius:10px;padding:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:1100px;margin:0 auto;}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  label{font-weight:600}
+  input[type="date"],input[type="text"]{padding:6px;border:1px solid #ddd;border-radius:6px;user-select:auto}
+  .status{margin-left:auto;font-weight:700}
+  .chip{display:inline-block;background:#111;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px}
+  .chip.green{background:#16a34a}.chip.red{background:#ef4444}.chip.gray{background:#6b7280}
+  .msg{margin-top:10px;font-weight:700}
+  table{width:100%;border-collapse:collapse;margin-top:14px}
+  th,td{border:1px solid #e5e7eb;padding:10px;text-align:center}
+  th{background:#2563eb;color:#fff;position:sticky;top:0}
+  tr:nth-child(even){background:#f9fafb}
+  tr:hover{background:#fde68a}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">🏛️ ABC Institute of Technology</div>
+  <button class="btn red" id="logout">Logout</button>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="row">
+      <label for="pubDate">Publication Date:</label>
+      <input type="date" id="pubDate" />
+      <button class="btn green" id="publishBtn" disabled>Publish</button>
+      <button class="btn gray" id="unpublishBtn" disabled>Unpublish</button>
+      <div class="status" id="pubStatus"><span class="chip gray">Not Published</span></div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <label for="sessionInput">Set Session:</label>
+      <input type="text" id="sessionInput" placeholder="e.g. 2025-2026"/>
+      <button class="btn blue" id="setSessionBtn">Set Session</button>
+      <div class="status" id="sessionStatus"><span class="chip gray">No Session</span></div>
+    </div>
+
+    <div class="msg" id="msg"></div>
+
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>SL No</th><th>Roll</th><th>Name</th><th>Subject</th>
+          <th>Marks</th><th>Total</th><th>Session</th><th>Publication</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const publishedKey='resultsPublished';
+const pubDateKey='resultsPubDate';
+const sessionKey='resultsSession';
+
+function rid(r){return `${r.roll}_${r.exam}_${r.timestamp}`}
+function showMsg(t){$('#msg').textContent=t;setTimeout(()=>$('#msg').textContent='',2000);}
+function renderPubStatus(){const isPub=JSON.parse(localStorage.getItem(publishedKey)||'false');const d=localStorage.getItem(pubDateKey)||'Not Set';$('#pubStatus').innerHTML=isPub?`<span class="chip green">Published</span> ${new Date(d).toLocaleDateString()}`:`<span class="chip gray">Not Published</span>`}
+function renderSessionStatus(){const s=localStorage.getItem(sessionKey)||'';$('#sessionStatus').innerHTML=s?`<span class="chip green">${s}</span>`:`<span class="chip gray">No Session</span>`;$('#publishBtn').disabled=!s;$('#unpublishBtn').disabled=!s;}
+
+function renderTable(){
+  const exams=JSON.parse(localStorage.getItem('exams')||'[]');
+  const all=JSON.parse(localStorage.getItem('allResults')||'[]');
+  const tb=$('#resultTable tbody');tb.innerHTML='';
+  all.forEach((r,i)=>{
+    const ex=exams.find(e=>e.subject===r.exam);const full=ex?.marks||0;
+    const got=Math.round((r.score||0)/(r.total||1)*full);
+    tb.innerHTML+=`<tr>
+      <td>${i+1}</td><td>${r.roll}</td><td>${r.name}</td><td>${r.exam}</td>
+      <td>${got}</td><td>${full}</td><td>${r.session||'-'}</td>
+      <td>${r.publicationDate?new Date(r.publicationDate).toLocaleDateString():'-'}</td>
+      <td>
+        <button class="btn blue" data-act="grade" data-id="${rid(r)}">Grade Card</button>
+        <button class="btn red" data-act="delete" data-id="${rid(r)}">Delete</button>
+      </td>
+    </tr>`;
+  });
+}
+
+document.addEventListener("click",e=>{
+  if(e.target.dataset.act==="grade"){
+    const id=e.target.dataset.id;
+    const all=JSON.parse(localStorage.getItem("allResults")||"[]");
+    const rec=all.find(r=>rid(r)===id);
+    localStorage.setItem("lastGradeCardContext",JSON.stringify({from:"admin",record:rec}));
+    location.href="Grade-card.html";
+  }
+  if(e.target.dataset.act==="delete"){
+    const id=e.target.dataset.id;
+    let all=JSON.parse(localStorage.getItem("allResults")||"[]");
+    all=all.filter(r=>rid(r)!==id);
+    localStorage.setItem("allResults",JSON.stringify(all));
+    showMsg("Result deleted!");
+    renderTable();
+  }
+});
+
+$('#publishBtn').onclick=()=>{
+  const sess=(localStorage.getItem(sessionKey)||'').trim();if(!sess){showMsg("Set session!");return;}
+  const d=$('#pubDate').value||new Date().toISOString().split("T")[0];
+  const batch=Date.now();
+  let all=JSON.parse(localStorage.getItem('allResults')||'[]');
+  all=all.map(r=>r.published? r:{...r,published:true,session:sess,publishBatch:batch,publicationDate:d});
+  localStorage.setItem('allResults',JSON.stringify(all));
+  localStorage.setItem(publishedKey,'true');localStorage.setItem(pubDateKey,d);
+  showMsg("Published!");renderPubStatus();renderTable();
+}
+$('#unpublishBtn').onclick=()=>{localStorage.setItem(publishedKey,'false');showMsg("Unpublished!");renderPubStatus();}
+$('#setSessionBtn').onclick=()=>{const v=$('#sessionInput').value.trim();if(!v){showMsg("Enter session!");return;}localStorage.setItem(sessionKey,v);showMsg("Session set.");renderSessionStatus();}
+$('#logout').onclick=()=>location.href="admin-main.html";
+(function(){renderPubStatus();renderSessionStatus();renderTable();})();
+</script>
+</body>
+</html>

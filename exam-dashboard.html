@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Exam Dashboard</title>
+<style>
+  * {
+    user-select: none; /* disable text selection everywhere */
+  }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    background: linear-gradient(-45deg, #ff9a9e, #fbc2eb, #a1c4fd, #c2e9fb);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    touch-action: none; /* disable general touch */
+  }
+  @keyframes gradientBG {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    font-size: 28px;
+    font-weight: bold;
+    color: black;
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none; /* disable mouse/touch events */
+  }
+  .logout-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    pointer-events: auto; /* allow click/touch only here */
+  }
+  .card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    width: 450px;
+    margin-top: 140px;
+    pointer-events: none; /* disable general touch */
+  }
+  .card * {
+    pointer-events: auto; /* enable only inputs and buttons */
+  }
+  h2 { text-align: center; margin-bottom: 20px; color: #333; pointer-events: none; }
+  label { font-weight: bold; margin-top: 10px; display: block; pointer-events: none; }
+  input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; }
+  button.main-btn { margin-top: 15px; padding: 8px 15px; border: none; border-radius: 6px; background: #2563eb; color: white; font-size: 14px; cursor: pointer; }
+  button.main-btn:hover { background: #1e4ed8; }
+  #msg { color: green; text-align: center; margin-top: 10px; pointer-events: none; }
+  .exam-list { margin-top: 25px; pointer-events: none; }
+  .exam-item { background: #f9f9f9; border: 1px solid #ddd; padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; pointer-events: none; }
+  .exam-actions button { pointer-events: auto; }
+</style>
+</head>
+<body>
+  <header>
+    <span>🏛️ ABS Institute of Technology</span>
+    <div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>Add Exam Details</h2>
+    <form onsubmit="saveExam(event)">
+      <label>Subject</label>
+      <input type="text" id="subject" required>
+
+      <label>Date</label>
+      <input type="date" id="date" required>
+
+      <label>Time</label>
+      <input type="time" id="time" required>
+
+      <label>Full Marks</label>
+      <input type="number" id="marks" required>
+
+      <label>Duration (in minutes)</label>
+      <input type="number" id="duration" required>
+
+      <button type="submit" class="main-btn">Save Exam</button>
+    </form>
+    <p id="msg"></p>
+
+    <div class="exam-list" id="examList"></div>
+  </div>
+
+<script>
+function saveExam(e){
+  e.preventDefault();
+  let subject=document.getElementById("subject").value;
+  let date=document.getElementById("date").value;
+  let time=document.getElementById("time").value;
+  let marks=document.getElementById("marks").value;
+  let duration=document.getElementById("duration").value;
+
+  let exam = { id: Date.now(), subject, date, time, marks, duration };
+  let exams = JSON.parse(localStorage.getItem("exams")) || [];
+  exams.push(exam);
+  localStorage.setItem("exams", JSON.stringify(exams));
+
+  document.querySelector("form").reset();
+  document.getElementById("msg").textContent = `Exam "${subject}" added successfully!`;
+
+  renderExams();
+}
+
+function deleteExam(id){
+  let exams = JSON.parse(localStorage.getItem("exams")) || [];
+  exams = exams.filter(ex => ex.id !== id);
+  localStorage.setItem("exams", JSON.stringify(exams));
+  renderExams();
+}
+
+function setQuestions(id){
+  localStorage.setItem("currentExamId", id);
+  window.location.href = "questions.html";
+}
+
+function renderExams(){
+  let examList = document.getElementById("examList");
+  examList.innerHTML = "";
+  let exams = JSON.parse(localStorage.getItem("exams")) || [];
+  exams.forEach(ex => {
+    let div = document.createElement("div");
+    div.className = "exam-item";
+    div.innerHTML = `
+      <b>${ex.subject}</b><br>
+      Date: ${ex.date} | Time: ${ex.time}<br>
+      Marks: ${ex.marks} | Duration: ${ex.duration} mins
+      <div class="exam-actions">
+        <button onclick="setQuestions(${ex.id})">Set Question Paper</button>
+        <button style="background:#dc2626" onclick="deleteExam(${ex.id})">Delete</button>
+      </div>
+    `;
+    examList.appendChild(div);
+  });
+}
+
+function logout(){
+  setTimeout(()=>{ window.location.href = 'admin.html'; },100);
+}
+
+window.onload = renderExams;
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login / Signup with OTP</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function(){
+    emailjs.init({ publicKey: "nimkC_zaNOIPVJP7m" }); // ✅ Tumhara public key
+  })();
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;user-select:none;}
+body{min-height:100vh;display:flex;justify-content:center;align-items:center;
+    background:linear-gradient(-45deg,#ff9a9e,#fad0c4,#a1c4fd,#c2e9fb,#fbc2eb);
+    background-size:1000% 1000%;animation:bgFlow 20s ease infinite;}
+@keyframes bgFlow{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+header{position:fixed;top:0;left:0;width:100%;
+    background:linear-gradient(120deg,#ff9a9e,#fbc2eb,#a1c4fd,#c2e9fb);
+    background-size:400% 400%;animation:bg 10s ease infinite;
+    text-align:center;color:#fff;padding:15px;font-size:28px;font-weight:bold;z-index:20;}
+@keyframes bg{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+.container{position:relative;width:750px;height:580px;display:flex;overflow:hidden;border:2px solid #e46033;box-shadow:0 0 25px #e46033;}
+.msg{margin-top:10px;font-weight:bold;text-align:center;}
+.success{color:#28a745;}
+.error{color:#ff4d4d;}
+.form-box{flex:1;overflow-y:auto;background:linear-gradient(-45deg,#000000,#1a1a1a,#0f0f0f,#2d2d2d);
+    background-size:400% 400%;animation:darkFlow 15s ease infinite;color:#fff;padding:40px;}
+@keyframes darkFlow{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+.info-content{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+    background:linear-gradient(-45deg,#ff9966,#ff5e62,#ff758c,#ff7eb3);
+    background-size:400% 400%;animation:warmFlow 15s ease infinite;padding:40px;color:#fff;text-align:center;}
+@keyframes warmFlow{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+.form-box h2{text-align:center;margin-bottom:15px;}
+.input-box{margin:15px 0;}
+.input-box label{display:block;margin-bottom:5px;color:#fff;font-weight:500;}
+.input-box input, .input-box select{width:100%;height:45px;padding:0 10px;background:#1e1e1e;color:#fff;border:1px solid #e46033;border-radius:6px;outline:none;}
+.btn{width:100%;height:45px;margin-top:10px;border:none;border-radius:40px;background:#e46033;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 0 10px rgba(228,96,51,0.6);transition:.3s;}
+.btn:hover{background:#ff6a00;}
+.regi-link,.forgot-link{text-align:center;margin-top:10px;font-size:14px;}
+.regi-link a,.forgot-link a{color:#e46033;text-decoration:none;font-weight:600;cursor:pointer;}
+.regi-link a:hover,.forgot-link a:hover{text-decoration:underline;}
+.info-content h2{font-size:32px;margin-bottom:15px;}
+.info-content p{font-size:16px;margin-top:10px;}
+.timer{font-size:13px;color:#ffeb3b;margin-top:5px;}
+</style>
+</head>
+<body oncontextmenu="return false">
+<header>🏛️ ABC Institute of Technology</header>
+<div class="container" id="container">
+
+    <!-- LOGIN BOX -->
+    <div class="form-box" id="loginBox" style="display:block;">
+        <h2>Login</h2>
+        <div class="input-box"><label>Roll Number</label><input type="text" id="loginRoll"></div>
+        <div class="input-box"><label>Password</label><input type="password" id="loginPass"></div>
+        <button class="btn" onclick="login()">Login</button>
+        <div class="msg" id="loginMsg"></div>
+        <div class="forgot-link"><p><a href="forgot.html">Forgot Password?</a></p></div>
+        <div class="regi-link"><p>Don't have account? <a href="javascript:void(0)" onclick="showSignup()">Sign Up</a></p></div>
+    </div>
+
+    <!-- REGISTER BOX -->
+    <div class="form-box" id="registerBox" style="display:none;">
+        <h2>Register</h2>
+        <div class="input-box"><label>Name</label><input type="text" id="name"></div>
+        <div class="input-box"><label>Roll Number</label><input type="text" id="roll"></div>
+        <div class="input-box"><label>Date of Birth</label><input type="date" id="dob"></div>
+
+        <!-- ✅ Gender -->
+        <div class="input-box">
+            <label>Gender</label>
+            <select id="gender">
+                <option value="">-- Select Gender --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Others">Others</option>
+            </select>
+        </div>
+        
+        <!-- Phone OTP -->
+        <div class="input-box"><label>Phone Number</label><input type="text" id="phone" placeholder="+91XXXXXXXXXX"></div>
+        <div class="input-box"><label>Enter Phone OTP</label><input type="text" id="phoneOtp" maxlength="6"></div>
+        <button class="btn" id="sendPhoneBtn" onclick="sendPhoneOtp()">Send Phone OTP</button>
+        <div id="phoneOtpMsg" class="msg"></div>
+        <div id="phoneTimer" class="timer"></div>
+        
+        <!-- Email OTP -->
+        <div class="input-box"><label>Email Address</label><input type="email" id="email"></div>
+        <div class="input-box"><label>Enter Email OTP</label><input type="text" id="emailOtp" maxlength="6"></div>
+        <button class="btn" id="sendEmailBtn" onclick="sendEmailOtp()">Send Email OTP</button>
+        <div id="emailOtpMsg" class="msg"></div>
+        <div id="emailTimer" class="timer"></div>
+        
+        <!-- Password -->
+        <div class="input-box"><label>Password</label><input type="password" id="pass"></div>
+        <div class="input-box"><label>Confirm Password</label><input type="password" id="confirmPass"></div>
+        
+        <button class="btn" onclick="signup()">Register</button>
+        <div class="msg" id="signupMsg"></div>
+        <div class="regi-link"><p>Already have account? <a href="javascript:void(0)" onclick="showLogin()">Login</a></p></div>
+    </div>
+
+    <!-- INFO SIDE -->
+    <div class="info-content">
+        <h2>Welcome Back</h2>
+        <h2>ABC Institute of Technology</h2>
+        <p>Learning at ABC Institute of Technology is a journey of curiosity, perseverance, and passion, guiding students toward success and excellence in every endeavor.</p>
+        <p><b>Student Portal - Login or Register to Continue</b></p>
+    </div>
+</div>
+
+<script>
+let generatedPhoneOtp = "";
+let generatedEmailOtp = "";
+let phoneTimerInterval, emailTimerInterval;
+
+function startTimer(seconds, btnId, timerId, resendFn){
+  let timer=document.getElementById(timerId);
+  let btn=document.getElementById(btnId);
+  btn.disabled=true;
+  let remaining=seconds;
+  timer.innerText=`Resend OTP in 02:00`;
+  
+  let interval=setInterval(()=>{
+    remaining--;
+    let mins=String(Math.floor(remaining/60)).padStart(2,"0");
+    let secs=String(remaining%60).padStart(2,"0");
+    timer.innerText=`Resend OTP in ${mins}:${secs}`;
+    if(remaining<=0){
+      clearInterval(interval);
+      btn.disabled=false;
+      timer.innerHTML=`<button onclick="${resendFn}()" style="color:#ffeb3b;background:none;border:none;font-weight:bold;cursor:pointer;">Resend OTP</button>`;
+    }
+  },1000);
+  return interval;
+}
+
+function sendPhoneOtp(){
+  let phone=document.getElementById('phone').value.trim();
+  if(!phone){document.getElementById('phoneOtpMsg').innerText="⚠️ Enter phone number first!";document.getElementById('phoneOtpMsg').className="msg error";return;}
+  generatedPhoneOtp=Math.floor(100000+Math.random()*900000).toString();
+  document.getElementById('phoneOtpMsg').innerText="📩 Phone OTP: "+generatedPhoneOtp+" (for testing)";
+  document.getElementById('phoneOtpMsg').className="msg success";
+  clearInterval(phoneTimerInterval);
+  phoneTimerInterval=startTimer(120,"sendPhoneBtn","phoneTimer","sendPhoneOtp");
+}
+
+function sendEmailOtp(){
+  let email=document.getElementById('email').value.trim();
+  if(!email){document.getElementById('emailOtpMsg').innerText="⚠️ Enter email first!";document.getElementById('emailOtpMsg').className="msg error";return;}
+  generatedEmailOtp=Math.floor(100000+Math.random()*900000).toString();
+  let templateParams={user_email:email,passcode:generatedEmailOtp,time:new Date(Date.now()+5*60000).toLocaleTimeString()};
+  emailjs.send("service_n2mhzq2","template_ixpm2to",templateParams)
+    .then(()=>{document.getElementById('emailOtpMsg').innerText="✅ Email OTP sent!";document.getElementById('emailOtpMsg').className="msg success";})
+    .catch((err)=>{document.getElementById('emailOtpMsg').innerText="❌ Failed to send Email OTP";console.error(err);document.getElementById('emailOtpMsg').className="msg error";});
+  clearInterval(emailTimerInterval);
+  emailTimerInterval=startTimer(120,"sendEmailBtn","emailTimer","sendEmailOtp");
+}
+
+function signup(){
+  let phoneOtp=document.getElementById('phoneOtp').value.trim();
+  let emailOtp=document.getElementById('emailOtp').value.trim();
+  if(phoneOtp!==generatedPhoneOtp){
+    document.getElementById('signupMsg').innerText="❌ Invalid Phone OTP";
+    document.getElementById('signupMsg').className="msg error";return;
+  }
+  if(emailOtp!==generatedEmailOtp){
+    document.getElementById('signupMsg').innerText="❌ Invalid Email OTP";
+    document.getElementById('signupMsg').className="msg error";return;
+  }
+
+  let name=document.getElementById('name').value.trim();
+  let roll=document.getElementById('roll').value.trim();
+  let dob=document.getElementById('dob').value.trim();
+  let gender=document.getElementById('gender').value;
+  let phone=document.getElementById('phone').value.trim();
+  let email=document.getElementById('email').value.trim().toLowerCase();
+  let pass=document.getElementById('pass').value;
+  let confirm=document.getElementById('confirmPass').value;
+
+  if(!name||!roll||!dob||!gender||!phone||!email||!pass||!confirm){
+    document.getElementById('signupMsg').innerText="⚠️ Fill all fields";
+    document.getElementById('signupMsg').className="msg error";return;
+  }
+  if(pass!==confirm){
+    document.getElementById('signupMsg').innerText="❌ Password mismatch";
+    document.getElementById('signupMsg').className="msg error";return;
+  }
+
+  let users=JSON.parse(localStorage.getItem("current users"))||[];
+  if(users.some(u=>u.roll===roll)){
+    document.getElementById('signupMsg').innerText="⚠️ User with this roll number already exists";
+    document.getElementById('signupMsg').className="msg error";return;
+  }
+  if(users.some(u=>u.email && u.email.toLowerCase()===email)){
+    document.getElementById('signupMsg').innerText="⚠️ Email already exists";
+    document.getElementById('signupMsg').className="msg error";return;
+  }
+
+  users.push({name,roll,dob,gender,phone,email,password:pass});
+  localStorage.setItem("current users",JSON.stringify(users));
+
+  document.getElementById('signupMsg').innerText="✅ Account created! Redirecting...";
+  document.getElementById('signupMsg').className="msg success";
+  setTimeout(()=>{showLogin();},1000);
+}
+
+function login(){
+  let roll=document.getElementById('loginRoll').value.trim();
+  let pass=document.getElementById('loginPass').value.trim();
+  let users=JSON.parse(localStorage.getItem("current users"))||[];
+  let user=users.find(u=>u.roll===roll&&u.password===pass);
+  if(user){
+    localStorage.setItem("currentUser",JSON.stringify(user));
+    document.getElementById('loginMsg').innerText="✅ Login Successful! Redirecting...";
+    document.getElementById('loginMsg').className="msg success";
+    setTimeout(()=>{window.location.replace("student-dashboard.html");},500);
+  }else{
+    document.getElementById('loginMsg').innerText="❌ Roll number or password wrong";
+    document.getElementById('loginMsg').className="msg error";
+  }
+}
+
+function showSignup(){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("registerBox").style.display="block";
+}
+function showLogin(){
+  document.getElementById("registerBox").style.display="none";
+  document.getElementById("loginBox").style.display="block";
+}
+
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter"){e.preventDefault();
+    if(document.getElementById("loginBox").style.display!=="none"){login();}
+    else if(document.getElementById("registerBox").style.display!=="none"){signup();}
+  }
+});
+
+  window.onload = function () {
+    if (window.history && window.history.pushState) {
+      // Push a state to clear forward history
+      history.pushState(null, null, location.href);
+
+      // Handle back button
+      window.onpopstate = function () {
+        // Allow back button normally
+        if (window.history.state === null) {
+          return;
+        }
+        // Block forward navigation
+        history.pushState(null, null, location.href);
+      };
+    }
+  };
+
+</script>
+</body>
+</html>

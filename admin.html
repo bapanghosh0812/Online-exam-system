@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Login</title>
+<style>
+  body {
+    font-family: system-ui;
+    display: grid;
+    place-items: center;
+    height: 100vh;
+    margin: 0;
+    user-select: none;   /* text select off */
+    -webkit-user-drag: none; 
+    background: linear-gradient(270deg, #ff6b6b, #f7b733, #45cafc, #6a82fb);
+    background-size: 800% 800%;
+    animation: gradientBG 15s ease infinite;
+  }
+
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+
+  .card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.2);
+    width: 320px;
+    z-index: 1;
+    margin-top: 70px; /* topbar ke liye space */
+  }
+  h2 { text-align: center; }
+  input,button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+  button {
+    background: #2563eb;
+    color: #fff;
+    border: 0;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.3s;
+  }
+  button:hover { background: #1e4ed8; }
+  .error {
+    color: red;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body oncontextmenu="return false">
+
+<div class="topbar">🏛️ ABS Institute of Technology</div>
+
+<div class="card">
+  <h2>Admin Login</h2>
+  <input id="adminUser" placeholder="Admin Username">
+  <input id="adminPass" type="password" placeholder="Password">
+  <button id="loginBtn">Login</button>
+  <div id="error" class="error"></div>
+</div>
+
+<script>
+  const loginBtn = document.getElementById("loginBtn");
+
+  function doLogin(){
+    const u = document.getElementById("adminUser").value.trim();
+    const p = document.getElementById("adminPass").value.trim();
+
+    const storedUsers = JSON.parse(localStorage.getItem("adminAccounts")) || [];
+
+    // Check saved accounts
+    const found = storedUsers.find(acc => acc.username === u && acc.password === p);
+
+    // Also allow demo login
+    const isDemo = (u === "admin" && p === "admin123");
+
+    if(found || isDemo){
+      document.getElementById("error").textContent = "✔ Login Successful, redirecting...";
+      setTimeout(() => {
+        window.location.href = "admin-main.html"; 
+      }, 1000); // 1 second delay
+    } else {
+      document.getElementById("error").textContent = "❌ Invalid username or password.";
+    }
+  }
+
+  loginBtn.addEventListener("click", doLogin);
+
+  // Enter key press bhi kaam karega
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ doLogin(); }
+  });
+</script>
+</body>
+</html>

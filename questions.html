@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Set Question Paper</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      background: linear-gradient(-45deg,#ff9a9e,#fad0c4,#a1c4fd,#c2e9fb,#fbc2eb);
+      background-size: 1000% 1000%;
+      animation: bgFlow 20s ease infinite;
+      user-select: none;
+    }
+    @keyframes bgFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    header {
+      background: linear-gradient(120deg,#ff9a9e,#fbc2eb,#a1c4fd,#c2e9fb);
+      background-size: 400% 400%;
+      animation: bg 10s ease infinite;
+      color: #fff;
+      padding: 15px;
+      font-size: 22px;
+      font-weight: bold;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      text-align: center;
+    }
+    @keyframes bg {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      width: 550px;
+      margin-top: 80px;
+    }
+    h2 { text-align: center; margin-bottom: 20px; color: #333; }
+    label { font-weight: bold; margin-top: 10px; display: block; }
+    textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      user-select: auto;
+      resize: vertical;
+      min-height: 50px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { background: #1e4ed8; }
+    #msg { color: green; text-align: center; margin-top: 10px; }
+    .question-list { margin-top: 25px; }
+    .question-item {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .question-actions { margin-top: 8px; }
+    .back-btn {
+      display:block;
+      margin:20px auto 0;
+      background:#2563eb;
+      color:#fff;
+      padding:10px 15px;
+      border:none;
+      border-radius:6px;
+      text-align:center;
+      font-weight:bold;
+      text-decoration:none;
+      width:max-content;
+      cursor:pointer;
+    }
+    .back-btn:hover { background:#1e4ed8; }
+  </style>
+</head>
+<body>
+  <header>🏛️ ABC Institute of Technology</header>
+
+  <div class="card">
+    <h2>Set Question Paper</h2>
+    <form id="qForm" onsubmit="saveQuestion(event)">
+      <label>Question</label>
+      <textarea id="question" required></textarea>
+
+      <label>Option A</label>
+      <textarea id="optA" required></textarea>
+
+      <label>Option B</label>
+      <textarea id="optB" required></textarea>
+
+      <label>Option C</label>
+      <textarea id="optC" required></textarea>
+
+      <label>Option D</label>
+      <textarea id="optD" required></textarea>
+
+      <label>Correct Answer</label>
+      <select id="answer" required>
+        <option value="">--Select--</option>
+        <option value="A">Option A</option>
+        <option value="B">Option B</option>
+        <option value="C">Option C</option>
+        <option value="D">Option D</option>
+      </select>
+
+      <button type="submit">Save Question</button>
+    </form>
+    <p id="msg"></p>
+
+    <div class="question-list" id="questionList"></div>
+
+    <button class="back-btn" onclick="location.href='exam-dashboard.html'">⬅ Back to Dashboard</button>
+  </div>
+
+<script>
+let examId = localStorage.getItem("currentExamId");
+if(!examId){
+  alert("No exam selected!");
+  window.location.href = "dashboard.html";
+}
+
+function saveQuestion(e){
+  e.preventDefault();
+  let question = document.getElementById("question").value;
+  let optA = document.getElementById("optA").value;
+  let optB = document.getElementById("optB").value;
+  let optC = document.getElementById("optC").value;
+  let optD = document.getElementById("optD").value;
+  let answer = document.getElementById("answer").value;
+
+  let q = { id: Date.now(), question, optA, optB, optC, optD, answer };
+
+  let allQuestions = JSON.parse(localStorage.getItem("questions")) || {};
+  if(!allQuestions[examId]) allQuestions[examId] = [];
+  allQuestions[examId].push(q);
+  localStorage.setItem("questions", JSON.stringify(allQuestions));
+
+  document.querySelector("form").reset();
+  document.getElementById("msg").textContent = "Question added successfully!";
+  renderQuestions();
+}
+
+// 🟢 function to convert \n -> <br>
+function formatText(txt){
+  return txt.replace(/\n/g,"<br>");
+}
+
+function deleteQuestion(qid){
+  let allQuestions = JSON.parse(localStorage.getItem("questions")) || {};
+  allQuestions[examId] = allQuestions[examId].filter(q => q.id !== qid);
+  localStorage.setItem("questions", JSON.stringify(allQuestions));
+  renderQuestions();
+}
+
+function renderQuestions(){
+  let questionList = document.getElementById("questionList");
+  questionList.innerHTML = "";
+  let allQuestions = JSON.parse(localStorage.getItem("questions")) || {};
+  let examQuestions = allQuestions[examId] || [];
+
+  examQuestions.forEach(q => {
+    let div = document.createElement("div");
+    div.className = "question-item";
+    div.innerHTML = `
+      <b>${formatText(q.question)}</b><br>
+      A) ${formatText(q.optA)} <br>
+      B) ${formatText(q.optB)} <br>
+      C) ${formatText(q.optC)} <br>
+      D) ${formatText(q.optD)} <br>
+      <b>Answer:</b> ${q.answer}
+      <div class="question-actions">
+        <button style="background:#dc2626" onclick="deleteQuestion(${q.id})">Delete</button>
+      </div>
+    `;
+    questionList.appendChild(div);
+  });
+}
+
+window.onload = renderQuestions;
+</script>
+</body>
+</html>

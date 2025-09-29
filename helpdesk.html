@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helpdesk - ABC Institute</title>
+<style>
+/* Body & animated background */
+body {
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(-45deg, #ffecd2, #fcb69f, #ffdde1, #ee9ca7, #a1c4fd, #c2e9fb);
+  background-size: 1000% 1000%;
+  animation: bgFlow 20s ease infinite;
+  user-select: none;
+}
+@keyframes bgFlow {
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* Header */
+header {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  background: linear-gradient(120deg,#ff9a9e,#fbc2eb,#a1c4fd,#c2e9fb);
+  background-size: 400% 400%;
+  animation: bgHeader 10s ease infinite;
+  text-align: center;
+  color: #fff;
+  padding: 15px;
+  font-size: 26px;
+  font-weight: bold;
+  z-index: 20;
+}
+@keyframes bgHeader {
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* Container */
+.container {
+  background: rgba(255,255,255,0.95);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  width: 380px;
+  text-align: center;
+  position: relative;
+  top: 80px;
+}
+
+/* Inputs & Buttons */
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+textarea { resize: none; }
+button {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(90deg, #f7971e, #ffd200);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+}
+button:hover { opacity: 0.9; }
+
+#status { margin-top: 12px; font-weight: bold; }
+.error { color: red; }
+.success { color: green; }
+
+.back-btn {
+  margin-top: 10px;
+  display: inline-block;
+  padding: 8px 14px;
+  background: #0073e6;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+.back-btn:hover { background:#005bb5; }
+
+/* Contact Info */
+.contact-box {
+  margin-top: 20px;
+  padding: 12px;
+  background: #f1f1f1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+}
+.contact-box p {
+  margin: 5px 0;
+}
+</style>
+</head>
+<body oncontextmenu="return false">
+
+<header>🏛️ ABC Institute of Technology</header>
+
+<div class="container">
+  <h2>Helpdesk</h2>
+  <form id="helpdesk-form">
+    <input type="text" name="user_name" placeholder="Your Name" required>
+    <input type="email" name="user_email" placeholder="Your Email" required>
+    <textarea name="message" placeholder="Type your message" rows="4" required></textarea>
+    <button type="submit">Send</button>
+  </form>
+  <p id="status"></p>
+  <a href="index.html" class="back-btn">⬅ Back</a>
+
+  <div class="contact-box">
+    <p><b>📞 Contact:</b> Bapan Ghosh - 9883290273</p>
+    <p><b>📧 Email:</b> bapanghosh0812@gmail.com</p>
+  </div>
+</div>
+
+<!-- EmailJS Library -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
+<script>
+  (function(){
+    emailjs.init("gBKMJwl0v2yqzqBwx"); // Public Key
+  })();
+
+  const form = document.getElementById("helpdesk-form");
+  const status = document.getElementById("status");
+
+  function isValidEmail(email) {
+    const pattern = /^[^ ]+@[^ ]+\.[a-z]{2,}$/;
+    return pattern.test(email);
+  }
+
+  function sendMail() {
+    const emailField = form.user_email.value.trim();
+    if (!isValidEmail(emailField)) {
+      status.innerText = "❌ Please enter a valid email address!";
+      status.className = "error";
+      return;
+    }
+
+    // Send query to institute
+    emailjs.sendForm("service_7w42hdl", "template_hndtwih", form)
+      .then(function() {
+        // Send auto-reply to user
+        emailjs.sendForm("service_7w42hdl", "template_j3uq89m", form);
+
+        status.innerText = "✅ Your query has been submitted successfully! Redirecting to home...";
+        status.className = "success";
+        form.reset();
+
+        // Redirect after 3 seconds
+        setTimeout(() => { window.location.href = "index.html"; }, 1000);
+      }, function(error) {
+        status.innerText = "❌ Failed to send message. Please try again!";
+        status.className = "error";
+        console.error("EmailJS Error:", error);
+      });
+  }
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    sendMail();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+      e.preventDefault();
+      sendMail();
+    }
+  });
+
+  window.onload = function () {
+    if (window.history && window.history.pushState) {
+      // Push a state to clear forward history
+      history.pushState(null, null, location.href);
+
+      // Handle back button
+      window.onpopstate = function () {
+        // Allow back button normally
+        if (window.history.state === null) {
+          return;
+        }
+        // Block forward navigation
+        history.pushState(null, null, location.href);
+      };
+    }
+  };
+
+</script>
+
+</body>
+</html>
