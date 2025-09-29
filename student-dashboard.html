@@ -179,18 +179,71 @@ renderStudentInfo();
 renderExams();
 
 (function () {
-    function blockNav() {
-        history.pushState(null, null, location.href);
+  'use strict';
+
+  // Start by replacing current entry (so we don't grow history on load)
+  try { history.replaceState(null, null, location.href); } catch (e) {}
+
+  // Push two sentinel states so pop/forward can be neutralised
+  try {
+    history.pushState({ sentinel: 1 }, null, location.href);
+    history.pushState({ sentinel: 2 }, null, location.href);
+  } catch (e) {}
+
+  // When any history navigation happens, immediately restore the sentinel states.
+  window.addEventListener('popstate', function (ev) {
+    try {
+      // Re-create sentinel states immediately to block both directions
+      history.pushState({ sentinel: 1 }, null, location.href);
+      history.pushState({ sentinel: 2 }, null, location.href);
+    } catch (e) {}
+  }, false);
+
+  // If page is loaded from bfcache (pageshow.persisted) re-apply sentinel
+  window.addEventListener('pageshow', function (ev) {
+    if (ev.persisted) {
+      try {
+        history.replaceState(null, null, location.href);
+        history.pushState({ sentinel: 1 }, null, location.href);
+        history.pushState({ sentinel: 2 }, null, location.href);
+      } catch (e) {}
     }
-    blockNav();
+  }, false);
 
-    window.addEventListener("popstate", blockNav);
+  // Small defensive periodic re-assertion (helps some flaky WebViews)
+  var _interval = setInterval(function () {
+    try {
+      history.replaceState(null, null, location.href);
+      history.pushState({ sentinel: 1 }, null, location.href);
+      history.pushState({ sentinel: 2 }, null, location.href);
+    } catch (e) {}
+  }, 1200);
 
-    window.addEventListener("pageshow", function (event) {
-        if (event.persisted) {
-            blockNav();
-        }
-    });
+  // Prevent some keyboard navigation shortcuts (Alt+←, Alt+→, BrowserBack/BrowserForward keys)
+  window.addEventListener('keydown', function (e) {
+    // common keys for back/forward: Alt+ArrowLeft / Alt+ArrowRight
+    if ((e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) ||
+        e.key === 'BrowserBack' || e.key === 'BrowserForward') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, { passive: false });
+
+  // If page becomes hidden (possible navigation), quickly re-assert sentinel after a short delay
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      setTimeout(function () {
+        try {
+          history.replaceState(null, null, location.href);
+          history.pushState({ sentinel: 1 }, null, location.href);
+          history.pushState({ sentinel: 2 }, null, location.href);
+        } catch (e) {}
+      }, 50);
+    }
+  });
+
+  // Clean up interval on unload
+  window.addEventListener('unload', function () { clearInterval(_interval); }, false);
 })();
 
 </script>
