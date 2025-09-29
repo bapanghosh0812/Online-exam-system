@@ -179,16 +179,16 @@ renderStudentInfo();
 renderExams();
 
 (function () {
-    
-    history.pushState(null, null, location.href);
-
-        window.addEventListener("popstate", function () {
+    function blockNav() {
         history.pushState(null, null, location.href);
-    });
+    }
+    blockNav();
+
+    window.addEventListener("popstate", blockNav);
 
     window.addEventListener("pageshow", function (event) {
         if (event.persisted) {
-            history.pushState(null, null, location.href);
+            blockNav();
         }
     });
 })();
