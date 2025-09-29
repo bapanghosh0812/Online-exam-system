@@ -144,16 +144,18 @@ if(hasFail){
   el('#sgpa').textContent=(totalCredPt/totalCred).toFixed(2);
 }
 
- (function () {
-    // Force clear forward stack on load
-    if (window.history.forward(1)) {
-        window.history.go(-1);
-    }
+(function () {
+   
+    history.pushState(null, null, location.href);
 
-    // Allow back but kill forward
-    window.addEventListener("pageshow", function (event) {
+    window.addEventListener("popstate", function (event) {
+    
+        history.pushState(null, null, location.href);
+    });
+
+       window.addEventListener("pageshow", function (event) {
         if (event.persisted) {
-            window.location.reload(); // cache se aane par bhi forward clear ho
+            history.pushState(null, null, location.href);
         }
     });
 })();

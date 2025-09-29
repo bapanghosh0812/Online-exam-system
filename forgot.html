@@ -168,17 +168,15 @@ function resetPassword(){
 document.getElementById("resetBtn").addEventListener("click",resetPassword);
 
   (function () {
-    // Page load hote hi ek state push karo
+   
     history.pushState(null, null, location.href);
 
-    // Jab user back kare to allow karo (kyunki hum chahte hain back kaam kare)
     window.addEventListener("popstate", function (event) {
-        // Fir se ek state daal do taaki forward stack khatam ho jaye
+    
         history.pushState(null, null, location.href);
     });
 
-    // Extra: Agar koi forward dabaye to turant disable ho
-    window.addEventListener("pageshow", function (event) {
+       window.addEventListener("pageshow", function (event) {
         if (event.persisted) {
             history.pushState(null, null, location.href);
         }
