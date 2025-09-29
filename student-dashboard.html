@@ -102,7 +102,7 @@
 <script>
 function logout(){
   localStorage.removeItem("currentUser");
-  setTimeout(() => { window.location.replace("login.html"); }, 100); // ✅ changed
+  setTimeout(() => { window.location.href = "login.html"; }, 100);
 }
 
 function updateClock(){
@@ -170,10 +170,15 @@ function renderExams(){
 function startExam(id, subject, endTime){
   // 🚀 exam questions page pe leke jaayega
   localStorage.setItem("currentExam", JSON.stringify({id, subject, endTime}));
-  window.location.replace("exam.html"); // ✅ changed
+  window.location.href = "exam.html"; // <-- yaha tumhara questions page hoga
 }
 
-(function () {
+// ✅ Function calls niche rakhe
+updateClock();
+renderStudentInfo();
+renderExams();
+
+ (function () {
    
     history.pushState(null, null, location.href);
 
