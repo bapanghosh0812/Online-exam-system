@@ -144,22 +144,18 @@ if(hasFail){
   el('#sgpa').textContent=(totalCredPt/totalCred).toFixed(2);
 }
 
-  window.onload = function () {
-    if (window.history && window.history.pushState) {
-      // Push a state to clear forward history
-      history.pushState(null, null, location.href);
+  // Disable forward navigation
+  (function () {
+    // When page loads, push a state
+    history.pushState(null, null, location.href);
 
-      // Handle back button
-      window.onpopstate = function () {
-        // Allow back button normally
-        if (window.history.state === null) {
-          return;
-        }
-        // Block forward navigation
-        history.pushState(null, null, location.href);
-      };
-    }
-  };
+    window.addEventListener("popstate", function () {
+      // If user tries to go forward, block it by always going back
+      if (performance.getEntriesByType("navigation")[0].type === "back_forward") {
+        history.go(-1); // Force back instead of forward
+      }
+    });
+  })();
 
 
 </script>
