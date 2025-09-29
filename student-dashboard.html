@@ -178,16 +178,15 @@ updateClock();
 renderStudentInfo();
 renderExams();
 
- (function () {
-   
+(function () {
+    
     history.pushState(null, null, location.href);
 
-    window.addEventListener("popstate", function (event) {
-    
+        window.addEventListener("popstate", function () {
         history.pushState(null, null, location.href);
     });
 
-       window.addEventListener("pageshow", function (event) {
+    window.addEventListener("pageshow", function (event) {
         if (event.persisted) {
             history.pushState(null, null, location.href);
         }
