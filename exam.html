@@ -265,23 +265,18 @@ setInterval(() => {
   }
 }, 4000);
 
-  (function () {
-  // Forward block
-  history.pushState(null, null, location.href);
+ (function () {
+  history.pushState(null, "", location.href);
+
+  window.addEventListener("popstate", function () {
+    history.pushState(null, "", location.href);
+  });
+
   window.addEventListener("pageshow", function (event) {
     if (event.persisted) {
-      history.pushState(null, null, location.href);
+      history.pushState(null, "", location.href);
     }
   });
-
-  // Back block
-  window.addEventListener("popstate", function () {
-    history.go(1); // 👈 force forward, so back won't work
-  });
-})();
-
-  // Clean up interval on unload
-  window.addEventListener('unload', function () { clearInterval(_interval); }, false);
 })();
 
 </script>
