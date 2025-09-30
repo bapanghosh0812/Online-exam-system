@@ -94,6 +94,12 @@ if (!currentExamId) {
   sessionStorage.setItem("currentExamId", currentExamId);
 }
 
+// 🔒 Add this lock here
+const submittedExams = JSON.parse(localStorage.getItem('submittedExams') || '{}');
+if (submittedExams[currentExamId]) {
+  window.location.replace('student-dashboard.html');
+}
+
 const exams = JSON.parse(localStorage.getItem('exams')||'null');
 const questionsStore = JSON.parse(localStorage.getItem('questions')||'{}');
 if(!currentExamId||!exams){window.location.replace('student-dashboard.html');throw new Error('No exam info');}
@@ -266,17 +272,19 @@ setInterval(() => {
 }, 4000);
 
  (function () {
-  history.pushState(null, "", location.href);
+   
+    history.pushState(null, null, location.href);
 
-  window.addEventListener("popstate", function () {
-    history.pushState(null, "", location.href);
-  });
+    window.addEventListener("popstate", function (event) {
+    
+        history.pushState(null, null, location.href);
+    });
 
-  window.addEventListener("pageshow", function (event) {
-    if (event.persisted) {
-      history.pushState(null, "", location.href);
-    }
-  });
+       window.addEventListener("pageshow", function (event) {
+        if (event.persisted) {
+            history.pushState(null, null, location.href);
+        }
+    });
 })();
 
 </script>

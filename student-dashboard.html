@@ -157,8 +157,20 @@ function renderExams(){
       item.innerHTML = `<h3>${ex.subject}</h3><p><b>Date:</b> ${ex.date} | <b>Time:</b> ${ex.time}</p><button class='btn disabled' disabled>Not Started</button>`;
       document.getElementById("upcomingExams").appendChild(item);
     } else if(now >= examStart && now <= examEnd){
-      item.innerHTML = `<h3>${ex.subject}</h3><p><b>Date:</b> ${ex.date} | <b>Time:</b> ${ex.time}</p><button class='btn active' onclick='startExam(${ex.id}, "${ex.subject}", ${examEnd.getTime()})'>Start Exam</button>`;
-      document.getElementById("activeExams").appendChild(item);
+  if(submittedExams[ex.id]){
+    // ✅ Exam already submitted → button disable
+    item.innerHTML = `<h3>${ex.subject}</h3>
+      <p><b>Date:</b> ${ex.date} | <b>Time:</b> ${ex.time}</p>
+      <button class='btn disabled' disabled>Exam Submitted</button>`;
+  } else {
+    // ✅ Not submitted → Start Exam button
+    item.innerHTML = `<h3>${ex.subject}</h3>
+      <p><b>Date:</b> ${ex.date} | <b>Time:</b> ${ex.time}</p>
+      <button class='btn active' onclick='startExam(${ex.id}, "${ex.subject}", ${examEnd.getTime()})'>Start Exam</button>`;
+  }
+  document.getElementById("activeExams").appendChild(item);
+}
+
     } else {
       submittedExams[ex.id] = true;
       localStorage.setItem("submittedExams", JSON.stringify(submittedExams));
@@ -179,12 +191,15 @@ renderStudentInfo();
 renderExams();
 
 (function () {
+  // Push a dummy state into history
   history.pushState(null, "", location.href);
 
+  // If user presses back → redirect to login page
   window.addEventListener("popstate", function () {
-    history.pushState(null, "", location.href);
+    window.location.replace("login.html");
   });
 
+  // Reset history if page is loaded from cache
   window.addEventListener("pageshow", function (event) {
     if (event.persisted) {
       history.pushState(null, "", location.href);
